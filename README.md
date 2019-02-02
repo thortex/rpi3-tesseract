@@ -1,14 +1,14 @@
 # Tesseract OCR 4 for Raspberry Pi 3
 
-A prebuilt binary debian package of Tesseract OCR 4 for Raspberry Pi 3. 
+Prebuilt binary debian packages of Tesseract OCR 4 for Raspberry Pi 3. 
 
 ## Version Information
 
 | Name          | Version      |
 |:--------------|:-------------|
-| Leptonica     | 1.76.0       |
-| Tesseract OCR | 4.0.0-beta.3 |
-| Tessdata Fast | 4.0.0-beta.3 |
+| Leptonica     | 1.77.0       |
+| Tesseract OCR | 4.0.0        |
+| Tessdata Fast | 4.0.0        |
 
 ## Supported Languages
 

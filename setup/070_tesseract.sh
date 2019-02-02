@@ -1,19 +1,21 @@
 #!/bin/bash -x
 
-LEPT_VER=1.76.0
+LEPT_VER=1.77.0
 LEPT_URL=https://github.com/DanBloomberg/leptonica/releases/download/
 LEPT_SRC=leptonica-${LEPT_VER}.tar.gz
 LEPT_INS_DIR=/usr/local
 
-TESS_VER=4.0.0-beta.3
+TESS_VER=4.0.0
 TESS_URL=https://github.com/tesseract-ocr/tesseract/archive/
 TESS_SRC=${TESS_VER}.tar.gz
 TESS_INS_DIR=/usr/local
 
+TESS_DATA=https://github.com/tesseract-ocr/tessdata_fast/archive/${TESS_VER}.tar.gz
+
 OPT_FLAGS="-mtune=cortex-a53 -march=armv8-a+crc -mcpu=cortex-a53 -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard"
 
 function remove_old_pkgs() {
-    sudo apt-get remove \
+    sudo apt-get remove -y \
 	 liblept5 \
 	 libleptonica-dev \
 	 libtesseract-dev \
@@ -27,7 +29,8 @@ function remove_old_pkgs() {
 }
 
 function prepare_for_build() {
-    sudo apt-get install \
+    sudo apt-get install -y \
+	 gettext \
 	 asciidoc \
 	 gawk \
 	 g++ \
@@ -64,12 +67,13 @@ function build_leptonica() {
 }
 
 function install_leptonica() {
+    sudo mkdir -p /usr/local/lib /usr/local/bin /usr/local/include 
     sudo checkinstall -D \
 	 --install=yes \
 	 --pkgname=leptonica \
 	 --provides=leptonica \
 	 --pkgversion=${LEPT_VER}
-    mv leptonica_${LEPT_VER}-1_armhf.deb ../../release
+    mv leptonica_${LEPT_VER}-1_armhf.deb ../../release/
     cd ..
 }
 
@@ -101,7 +105,22 @@ function install_tesseract() {
 }
 
 function get_tessdata() {
-    git clone https://github.com/tesseract-ocr/tessdata_fast.git
+    mkdir -p tessdata_fast/script  
+    cd tessdata_fast 
+    U=https://github.com/tesseract-ocr/tessdata_fast/blob/master/
+    S='.traineddata?raw=true'
+    for l in ita tam swa fas msa hin jpn jpn_vert deu por rus chi_sim \
+                  chi_sim_vert ara spa fra eng osd; do
+        wget -c -O "$l.traineddata" "$U$l$S"
+    done
+   
+    cd script 
+    for l in Tamil Japanese Japanese_vert Arabic; do
+	wget -c -O "$l.traineddata" "${U}script/$l$S"
+    done 
+    cd .. 
+    
+    cd ..
 }
 
 function install_tessdata() {
@@ -110,7 +129,7 @@ function install_tessdata() {
     # Italian, Tamil, Swahili, Persian, Malay, Hindi, Japanese, German, 
     # Portoguese, Russian, Simplified Chinese, Arabic, Spanish, English
     echo -e "install:" > Makefile
-    echo -e "\tmkdir $D" >> Makefile
+    echo -e "\tmkdir -p $D" >> Makefile
     for l in ita tam swa fas msa hin jpn jpn_vert deu por rus chi_sim \
 		 chi_sim_vert ara spa fra eng osd; do
 	echo -e "\tinstall ${l}.traineddata $D" >> Makefile
@@ -124,7 +143,7 @@ function install_tessdata() {
     cd script
     D=/usr/local/share/tessdata/script
     echo -e "install:" > Makefile
-    echo -e "\tmkdir $D" >> Makefile
+    echo -e "\tmkdir -p $D" >> Makefile
     for l in Tamil Japanese Japanese_vert Arabic; do
 	echo -e "\tinstall ${l}.traineddata $D" >> Makefile
     done
